@@ -19,6 +19,11 @@ This script requires the following pre-requisites installed on the management ho
 
 This has been tested against Exchange 2013+
 
+## Caveats
+
+* This will only work when the active database is on it's own windows volume and logs on their own windows volume
+* This will not work in scenarios whereby exchange databases for both active and passive are on the same volume or multiple databases are on the same volume
+
 ## Configuring the script
 
 The following variables are required to be set inside `backup_exchange_dag.ps1`:
