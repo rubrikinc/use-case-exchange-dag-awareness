@@ -1,4 +1,5 @@
 Import-Module Rubrik
+
 ​function Get-RubrikHostVolumes($host_id) {
   $payload = @{
     "query" = "query HostWithSnappables(`$id: String!) { `
@@ -21,12 +22,24 @@ Import-Module Rubrik
   return $response.data.host.volumeGroup.volumes
 }
 ​
-$rubrik_ip = '172.21.10.76'
-$exchange_host = 'exctest-dag01.exctest.local'
-$csv_data = @()
-$csv_file = './dag_backups.csv'
+### Script Configuration Details
+
+$rubrik_ip = '0.0.0.0' # Rubrik DNS or IP Address
+$exchange_host = 'exch-dag01.exctest.local' # Exchange Server DNS or IP Address
+$rubrik_user = 'notauser' # Rubrik User for basic auth
+$rubrik_pass = 'notapass' # Rubrik Password for basic auth - This can be converted to a secure cred xml
+$csv_file = './dag_backups.csv' # Output CSV File
+​$host_names = @( 
+  'exch-dag01',
+  'exch-dag02'
+) # List of hosts in the exchange DAG
+$sla_domain_name = 'Gold' # Rubrik SLA to use during protection tasks
+
+### End of Script Configuration Details
+
 $backup_date = date
-​
+$csv_data = @()
+
 if(Test-Path -Path $csv_file){
   #File Exists
   write-host "File Exists"
@@ -36,13 +49,7 @@ if(Test-Path -Path $csv_file){
   Add-Content -Path $csv_file -Value '"Date","Server","Database","Drive","State"'
 }
 ​
-$host_names = @(
-  'exctest-dag01',
-  'exctest-dag02'
-)
-$sla_domain_name = 'Bronze'
-​
-Connect-Rubrik -Server $rubrik_ip
+Connect-Rubrik -Server $rubrik_ip -Username $rubrik_user -Password $(ConvertTo-SecureString -String $rubrik_pass -AsPlainText -Force) | Out-Null
 ​
 $sla_id = Get-RubrikSLA -PrimaryClusterID local -Name $sla_domain_name | Select-Object -ExpandProperty id
 ​
