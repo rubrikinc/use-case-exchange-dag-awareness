@@ -6,7 +6,7 @@ The account that this script will run under requires access to both Exchange and
 This script will achieve the following:
 
 * Connect to Rubrik and Exchange via Powershell
-* Determine the Active Location of the DAG Exchange Database
+* Determine the Active and Passive Location of the DAG Exchange Database
 * Determine the Drives that the Databases belong to
 * Instantiate a backup event of the drives
 * Perform a volume level snapshot of the drives discovered
