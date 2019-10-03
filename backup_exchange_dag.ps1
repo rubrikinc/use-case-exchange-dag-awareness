@@ -29,7 +29,7 @@ $exchange_host = 'exch-dag01.exctest.local' # Exchange Server DNS or IP Address
 $rubrik_user = 'notauser' # Rubrik User for basic auth
 $rubrik_pass = 'notapass' # Rubrik Password for basic auth - This can be converted to a secure cred xml
 $csv_file = './dag_backups.csv' # Output CSV File
-​$host_names = @( 
+​$host_names = @(
   'exch-dag01',
   'exch-dag02'
 ) # List of hosts in the exchange DAG
@@ -173,22 +173,23 @@ foreach ($drive in $drives_to_backup) {
 }
 ​
 foreach ($server in $hosts) {
-  
-  Write-Output $('Backing up volumes '+$server.drivesToBackup+' on server '+$server.serverName)
-  $volume_ids = @()
-  $volume_ids += $server.volumeDetails | Where-Object -Property mountPoints -in $server.drivesToBackup | select-object -ExpandProperty id
-  $vol_group_id = $server.volumeGroupId
-  $payload = @{
-    "slaId" = $sla_id;
-    "volumeIdsIncludedInSnapshot" = $volume_ids;
-  }
-  $snapshot = Invoke-RubrikRESTCall -Endpoint $('volume_group/'+$vol_group_id+'/snapshot') -api internal -Method POST -Body $payload
-  $status = Invoke-RubrikRESTCall -Endpoint $('volume_group/request/'+$snapshot.id) -api internal -Method GET
-  while ($status.status -notin $('SUCCEEDED','FAILURE','WARNING')) {
-    Start-Sleep 5
+  if ($server.drivesToBackup.count -gt 0) {
+    Write-Output $('Backing up volumes '+$server.drivesToBackup+' on server '+$server.serverName)
+    $volume_ids = @()
+    $volume_ids += $server.volumeDetails | Where-Object -Property mountPoints -in $server.drivesToBackup | select-object -ExpandProperty id
+    $vol_group_id = $server.volumeGroupId
+    $payload = @{
+      "slaId" = $sla_id;
+      "volumeIdsIncludedInSnapshot" = $volume_ids;
+    }
+    $snapshot = Invoke-RubrikRESTCall -Endpoint $('volume_group/'+$vol_group_id+'/snapshot') -api internal -Method POST -Body $payload
     $status = Invoke-RubrikRESTCall -Endpoint $('volume_group/request/'+$snapshot.id) -api internal -Method GET
+    while ($status.status -notin $('SUCCEEDED','FAILURE','WARNING')) {
+      Start-Sleep 5
+      $status = Invoke-RubrikRESTCall -Endpoint $('volume_group/request/'+$snapshot.id) -api internal -Method GET
+    }
+    Write-Output $('Backup of '+$server.serverName+', volumes '+$server.drivesToBackup+' completed with result '+$status)
+    $csv_data+="$backup_date,$server.serverName,$server.exchangeDatabase,$server.drivesToBackup,$status`n"
   }
-  Write-Output $('Backup of '+$server.serverName+', volumes '+$server.drivesToBackup+' completed with result '+$status)
-  $csv_data+="$backup_date,$server.serverName,$server.exchangeDatabase,$server.drivesToBackup,$status`n"
 }
 $csv_data | foreach {Add-Content -Path $csv_file -Value $_}
