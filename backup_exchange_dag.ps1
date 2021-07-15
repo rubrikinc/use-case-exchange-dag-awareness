@@ -1,6 +1,6 @@
 Import-Module Rubrik
 
-​function Get-RubrikHostVolumes($host_id) {
+function Get-RubrikHostVolumes($host_id) {
   $payload = @{
     "query" = "query HostWithSnappables(`$id: String!) { `
       host(id: `$id) { `
@@ -21,7 +21,6 @@ Import-Module Rubrik
   $response = Invoke-RubrikRESTCall -Endpoint 'graphql' -api internal -Method POST -Body $payload
   return $response.data.host.volumeGroup.volumes
 }
-​
 ### Script Configuration Details
 
 $rubrik_ip = '0.0.0.0' # Rubrik DNS or IP Address
@@ -29,7 +28,7 @@ $exchange_host = 'exch-dag01.exctest.local' # Exchange Server DNS or IP Address
 $rubrik_user = 'notauser' # Rubrik User for basic auth
 $rubrik_pass = 'notapass' # Rubrik Password for basic auth - This can be converted to a secure cred xml
 $csv_file = './dag_backups.csv' # Output CSV File
-​$host_names = @(
+$host_names = @(
   'exch-dag01',
   'exch-dag02'
 ) # List of hosts in the exchange DAG
@@ -48,11 +47,11 @@ if(Test-Path -Path $csv_file){
   New-Item -Path $csv_file -ItemType File
   Add-Content -Path $csv_file -Value '"Date","Server","Database","Drive","State"'
 }
-​
+
 Connect-Rubrik -Server $rubrik_ip -Username $rubrik_user -Password $(ConvertTo-SecureString -String $rubrik_pass -AsPlainText -Force) | Out-Null
-​
+
 $sla_id = Get-RubrikSLA -PrimaryClusterID local -Name $sla_domain_name | Select-Object -ExpandProperty id
-​
+
 $hosts = @()
 foreach ($host_name in $host_names) {
   $host_object = New-Object PSCustomObject
@@ -67,7 +66,7 @@ foreach ($host_name in $host_names) {
   $host_object | Add-Member -MemberType NoteProperty -Name 'drivesToBackup' -Value @()
   $hosts += $host_object
 }
-​
+
 # GET EXCHANGE DETAILS
 Function Connect-Exchange {
   param(
@@ -171,7 +170,7 @@ foreach ($drive in $drives_to_backup) {
     $this_host.exchangeDatabase += $drive.dbName
   }
 }
-​
+
 foreach ($server in $hosts) {
   if ($server.drivesToBackup.count -gt 0) {
     Write-Output $('Backing up volumes '+$server.drivesToBackup+' on server '+$server.serverName)
