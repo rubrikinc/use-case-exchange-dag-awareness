@@ -181,11 +181,11 @@ foreach ($server in $hosts) {
       "slaId" = $sla_id;
       "volumeIdsIncludedInSnapshot" = $volume_ids;
     }
-    $snapshot = Invoke-RubrikRESTCall -Endpoint $('volume_group/'+$vol_group_id+'/snapshot') -api internal -Method POST -Body $payload
-    $status = Invoke-RubrikRESTCall -Endpoint $('volume_group/request/'+$snapshot.id) -api internal -Method GET
+    $snapshot = Invoke-RubrikRESTCall -Endpoint $('volume_group/'+$vol_group_id+'/snapshot') -api 1 -Method POST -Body $payload
+    $status = Invoke-RubrikRESTCall -Endpoint $('volume_group/request/'+$snapshot.id) -api 1 -Method GET
     while ($status.status -notin $('SUCCEEDED','FAILURE','WARNING')) {
       Start-Sleep 5
-      $status = Invoke-RubrikRESTCall -Endpoint $('volume_group/request/'+$snapshot.id) -api internal -Method GET
+      $status = Invoke-RubrikRESTCall -Endpoint $('volume_group/request/'+$snapshot.id) -api 1 -Method GET
     }
     Write-Output $('Backup of '+$server.serverName+', volumes '+$server.drivesToBackup+' completed with result '+$status)
     $csv_data+="$backup_date,$server.serverName,$server.exchangeDatabase,$server.drivesToBackup,$status`n"
