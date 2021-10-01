@@ -182,7 +182,7 @@ foreach ($server in $hosts) {
       "volumeIdsIncludedInSnapshot" = $volume_ids;
     }
     $snapshot = Invoke-RubrikRESTCall -Endpoint $('volume_group/'+$vol_group_id+'/snapshot') -api 1 -Method POST -Body $payload
-    $status = Invoke-RubrikRESTCall -Endpoint $('volume_group/request/'+$snapshot.id) -api 1 -Method GET
+    $status = Invoke-RubrikRESTCall -Endpoint $('volume_group/request/'+$snapshot.id) -api internal -Method GET
     while ($status.status -notin $('SUCCEEDED','FAILURE','WARNING')) {
       Start-Sleep 5
       $status = Invoke-RubrikRESTCall -Endpoint $('volume_group/request/'+$snapshot.id) -api 1 -Method GET
